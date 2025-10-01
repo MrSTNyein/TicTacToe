@@ -1,4 +1,4 @@
-# TicTacToe 🍏
+# TicTacToe 
 
 A **premium Apple-style Tic-Tac-Toe game** built with **HTML, CSS, and JavaScript**. Play against an AI with multiple difficulty levels and enjoy cute animations, sounds, and a real-time leaderboard.  
 
