@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic-Tac-Toe</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+body {
+  margin:0; font-family: 'Inter', sans-serif; display:flex; flex-direction:column;
+  justify-content:center; align-items:center; min-height:100vh; background:#0f1724; color:white; overflow:hidden;
+}
+
+h1 {
+  margin:10px 0; text-align:center; font-weight:800; font-size:2rem;
+  background: linear-gradient(45deg,#7c3aed,#06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* Loader */
+#loader {
+  position:absolute; inset:0; display:flex; justify-content:center; align-items:center; flex-direction:column; background:#0f1724; z-index:100;
+}
+.loader-dots { display:flex; gap:10px; }
+.loader-dot { width:15px; height:15px; border-radius:50%; background:linear-gradient(90deg,#7c3aed,#06b6d4); animation: bounce 1s infinite; }
+.loader-dot:nth-child(1){ animation-delay:0s; }
+.loader-dot:nth-child(2){ animation-delay:0.2s; }
+.loader-dot:nth-child(3){ animation-delay:0.4s; }
+@keyframes bounce { 0%,80%,100%{ transform:scale(0);} 40%{ transform:scale(1);} }
+
+/* Floating App Icon */
+#appLogo {
+  width:80px; height:80px; border-radius:24px; background:linear-gradient(135deg,#7c3aed,#06b6d4);
+  display:flex; justify-content:center; align-items:center; font-size:2rem; margin-bottom:15px;
+  animation: floatLogo 2s ease-in-out infinite alternate;
+}
+@keyframes floatLogo { 0%{ transform: translateY(0);} 100%{ transform: translateY(-12px);} }
+
+/* Glassy panels */
+.glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border-radius:24px; padding:10px; }
+
+/* Controls */
+#controls { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:15px; }
+select, button { padding:8px 14px; border-radius:14px; border:none; font-weight:600; cursor:pointer; font-size:0.9rem; transition: all 0.2s; }
+select { background: rgba(255,255,255,0.1); color:white; }
+select:hover { background: rgba(255,255,255,0.2); }
+button.btn-start { background: linear-gradient(90deg,#7c3aed,#06b6d4); color:white; }
+button.btn-start:hover { opacity:0.9; }
+
+/* Board */
+#board {
+  display:grid; grid-template-columns: repeat(3,100px); grid-template-rows: repeat(3,100px); gap:10px;
+  border-radius:24px; backdrop-filter: blur(12px); background: rgba(255,255,255,0.05);
+}
+.cell {
+  display:flex; justify-content:center; align-items:center; font-size:2.5rem;
+  background: rgba(255,255,255,0.03); border-radius:16px; cursor:pointer; transition: all 0.2s; user-select:none; position:relative;
+}
+.cell:hover { transform: scale(1.1); background: rgba(124,58,237,0.2); }
+
+/* Tap effect animation */
+.cell.tap-effect::after {
+  content: ''; position:absolute; width:40px; height:40px; border-radius:50%;
+  background: rgba(124,58,237,0.3); animation: tapAnim 0.4s forwards; top:50%; left:50%; transform:translate(-50%, -50%);
+}
+@keyframes tapAnim { 0%{ transform:translate(-50%,-50%) scale(0); opacity:1;} 100%{ transform:translate(-50%,-50%) scale(2); opacity:0;} }
+
+/* Status and victory */
+#status { margin-top:10px; font-size:1.1rem; text-align:center; }
+#victoryBanner {
+  position:absolute; top:-100px; left:50%; transform:translateX(-50%);
+  background: linear-gradient(90deg,#7c3aed,#06b6d4);
+  padding:20px 40px; border-radius:20px; font-size:1.2rem; font-weight:700;
+  box-shadow:0 8px 20px rgba(0,0,0,0.4); display:flex; align-items:center; gap:10px; color:white; transition: top 0.5s ease;
+}
+#replayBtn { margin-left:10px; background:white; color:#7c3aed; border-radius:12px; padding:6px 12px; font-weight:600; cursor:pointer; transition: all 0.2s; }
+#replayBtn:hover { opacity:0.85; }
+
+/* Confetti */
+.confetti { position:absolute; pointer-events:none; animation:fall 2s linear forwards; }
+@keyframes fall { 0%{ transform: translateY(0) rotate(0deg); opacity:1; } 100%{ transform: translateY(500px) rotate(720deg); opacity:0; } }
+
+/* Leaderboard */
+#leaderboard {
+  margin-top:20px; background: rgba(255,255,255,0.05); padding:10px 20px; border-radius:20px; text-align:center;
+}
+#leaderboard h2 { margin:5px 0; }
+
+/* Footer */
+footer {
+  margin-top:20px; font-size:0.85rem; color: rgba(255,255,255,0.5); text-align:center;
+}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="loader-dots">
+	<div class="loader-dot"></div>
+	<div class="loader-dot"></div>
+	<div class="loader-dot"></div>
+  </div>
+  <p>Loading Tic-Tac-Toe...</p>
+</div>
+
+<div id="appLogo">🎮</div>
+<h1>Tic-Tac-Toe</h1>
+
+<div id="controls" class="glass">
+  <label>Player:</label>
+  <select id="playerSelect">
+	<option value="✈️">✈️ (X)</option>
+	<option value="🚀">🚀 (O)</option>
+  </select>
+
+  <label>Difficulty:</label>
+  <select id="difficultySelect">
+	<option value="easy">Easy</option>
+	<option value="medium">Medium</option>
+	<option value="hard">Hard</option>
+  </select>
+
+  <button class="btn-start" onclick="startGame()">Start Game</button>
+</div>
+
+<div id="board" class="glass"></div>
+<div id="status">Select player and difficulty to start.</div>
+
+<div id="victoryBanner"><span id="victoryText"></span><button id="replayBtn" onclick="startGame()">Replay</button></div>
+
+<div id="leaderboard" class="glass">
+  <h2>Leaderboard</h2>
+  <p id="scoreBoard">Player: 0 | AI: 0 | Draws: 0</p>
+</div>
+
+<footer>Developed by Sithu Nyein</footer>
+
+<!-- Sounds -->
+<audio id="placeSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+<audio id="winSound" src="https://actions.google.com/sounds/v1/cartoon/boing.ogg"></audio>
+<audio id="drawSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+
+<script>
+let board = [];
+let humanPlayer = '✈️', aiPlayer='🚀', currentPlayer='✈️';
+let gameActive=false, difficulty='easy';
+const winCombos=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+let playerScore=0, aiScore=0, drawScore=0;
+
+const boardDiv=document.getElementById('board');
+const statusDiv=document.getElementById('status');
+const victoryBanner=document.getElementById('victoryBanner');
+const victoryText=document.getElementById('victoryText');
+const scoreBoard=document.getElementById('scoreBoard');
+const loader=document.getElementById('loader');
+
+function hideLoader(){ loader.style.display='none'; }
+setTimeout(hideLoader,5000);
+
+function startGame(){
+  board = Array(9).fill('');
+  humanPlayer = document.getElementById('playerSelect').value;
+  aiPlayer = humanPlayer==='✈️'?'🚀':'✈️';
+  difficulty = document.getElementById('difficultySelect').value;
+  currentPlayer='✈️'; gameActive=true;
+  statusDiv.textContent = `Player ${humanPlayer}'s turn`;
+  victoryBanner.style.top='-100px';
+  renderBoard();
+  if(aiPlayer==='✈️') setTimeout(aiMove,300);
+}
+
+function renderBoard(){
+  boardDiv.innerHTML='';
+  board.forEach((cell,i)=>{
+	const div=document.createElement('div');
+	div.classList.add('cell'); div.textContent=cell;
+	div.addEventListener('click',()=>handleCellClick(i,div));
+	boardDiv.appendChild(div);
+  });
+}
+
+function handleCellClick(i,div){ 
+  if(!gameActive || board[i]!=='') return; 
+  if(currentPlayer===humanPlayer) {
+	makeMove(i,humanPlayer);
+	// Tap effect
+	div.classList.add('tap-effect');
+	setTimeout(()=>div.classList.remove('tap-effect'),400);
+	// Particle burst
+	launchTapParticles(div);
+  }
+}
+
+function makeMove(i,p){
+  board[i]=p; document.getElementById('placeSound').play();
+  currentPlayer = p===humanPlayer?aiPlayer:humanPlayer;
+  renderBoard(); checkGame();
+  if(gameActive && currentPlayer===aiPlayer) setTimeout(aiMove,300);
+}
+
+function aiMove(){
+  if(!gameActive) return;
+  let move; if(difficulty==='easy') move=randomMove();
+  else if(difficulty==='medium') move=blockOrRandom();
+  else move=minimax(board,aiPlayer).index;
+  makeMove(move,aiPlayer);
+  // optional AI particle
+  const aiCell = boardDiv.children[move];
+  aiCell.classList.add('tap-effect');
+  setTimeout(()=>aiCell.classList.remove('tap-effect'),400);
+  launchTapParticles(aiCell);
+}
+
+function randomMove(){ const empty=board.map((v,i)=>v===''?i:null).filter(v=>v!==null); return empty[Math.floor(Math.random()*empty.length)]; }
+
+function blockOrRandom(){
+  for(const i of board.map((v,i)=>i)){
+	if(board[i]===''){
+	  board[i]=aiPlayer; if(checkWin(board,aiPlayer)){ board[i]=''; return i; } board[i]='';
+	  board[i]=humanPlayer; if(checkWin(board,humanPlayer)){ board[i]=''; return i; } board[i]='';
+	}
+  }
+  return randomMove();
+}
+
+function checkGame(){
+  if(checkWin(board,humanPlayer)){ endGame(`Player ${humanPlayer} wins! 🎉`); playerScore++; }
+  else if(checkWin(board,aiPlayer)){ endGame(`AI (${aiPlayer}) wins! 🤖`); aiScore++; }
+  else if(!board.includes('')){ endGame("It's a draw! 🤝"); drawScore++; }
+  else statusDiv.textContent = `Player ${currentPlayer}'s turn`;
+  scoreBoard.textContent = `Player: ${playerScore} | AI: ${aiScore} | Draws: ${drawScore}`;
+}
+
+function endGame(msg){
+  gameActive=false; statusDiv.textContent=msg;
+  if(msg.includes("draw")) document.getElementById('drawSound').play(); else document.getElementById('winSound').play();
+  showVictoryBanner(msg); if(!msg.includes("draw")) launchConfetti();
+}
+
+function showVictoryBanner(msg){ victoryText.textContent=msg; victoryBanner.style.top='20px'; }
+
+function checkWin(b,p){ return winCombos.some(c=>c.every(i=>b[i]===p)); }
+
+function minimax(newBoard, player){
+  const avail = newBoard.map((v,i)=>v===''?i:null).filter(v=>v!==null);
+  if(checkWin(newBoard,humanPlayer)) return {score:-10};
+  if(checkWin(newBoard,aiPlayer)) return {score:10};
+  if(avail.length===0) return {score:0};
+  const moves=[];
+  for(const i of avail){
+	const move={index:i}; newBoard[i]=player;
+	const result=minimax(newBoard, player===aiPlayer?humanPlayer:aiPlayer); move.score=result.score;
+	newBoard[i]=''; moves.push(move);
+  }
+  let bestMove; if(player===aiPlayer){ let best=-10000; moves.forEach(m=>{if(m.score>best){best=m.score; bestMove=m;}}); return bestMove; }
+  else { let best=10000; moves.forEach(m=>{if(m.score<best){best=m.score; bestMove=m;}}); return bestMove; }
+}
+
+function launchConfetti(){
+	const emojis = ['🎉','✨','💫','🌟','🔥'];
+  for(let i=0;i<30;i++){
+	const span=document.createElement('span');
+	span.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+	span.className='confetti';
+	span.style.left=Math.random()*boardDiv.offsetWidth+'px';
+	span.style.top='-20px';
+	span.style.fontSize=(12+Math.random()*16)+'px';
+	document.body.appendChild(span);
+	setTimeout(()=>span.remove(),2000);
+  }
+}
+
+// Cute particle effect on tap
+function launchTapParticles(cell){
+  for(let i=0;i<6;i++){
+	const particle=document.createElement('span');
+	particle.textContent='⭐';
+	particle.className='confetti';
+	const rect=cell.getBoundingClientRect();
+	particle.style.left=(rect.left + rect.width/2)+'px';
+	particle.style.top=(rect.top + rect.height/2)+'px';
+	particle.style.fontSize=(8+Math.random()*10)+'px';
+	document.body.appendChild(particle);
+	setTimeout(()=>particle.remove(),800);
+  }
+}
+</script>
+
+</body>
+</html>
+
